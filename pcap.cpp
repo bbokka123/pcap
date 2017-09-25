@@ -55,12 +55,10 @@ int main(int argc, char* argv[]) {
 
     int count =1 ;
     int length= header ->len;
-    struct ether_header *ep;
-    unsigned short ether_type;
-   
-    ep = (struct ether_header *)packet;
+    
     struct ether_header *ethh;
-    ethh=ep;
+    uint16_t ether_type;   
+    ethh = (struct ether_header *)packet;
     printf("Src ether addr:");
     for(int i=0; i<5;i++){
     printf("%02x:",ethh->ether_shost[i]);
@@ -74,7 +72,7 @@ int main(int argc, char* argv[]) {
 
     packet += sizeof(struct ether_header);
     
-    ether_type = ntohs(ep->ether_type);
+    ether_type = ntohs(ethh->ether_type);
     
     if(ether_type == ETHERTYPE_IP)
     {
