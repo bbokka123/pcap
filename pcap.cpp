@@ -78,18 +78,19 @@ int main(int argc, char* argv[]) {
     {
 	    struct ip *iph;
 	    iph=(struct ip *)packet;
-	    printf("IP packet\n");
-	    printf("Src Address: %s\n", inet_ntoa(iph->ip_src));
-	    printf("Dst Address: %s\n", inet_ntoa(iph->ip_dst));
+	    printf("<IP information>\n");
+	    printf("Src IP addr: %s\n", inet_ntoa(iph->ip_src));
+	    printf("Dst IP addr: %s\n", inet_ntoa(iph->ip_dst));
     if(iph->ip_p==IPPROTO_TCP){
 	    struct tcphdr *tcph;
 	    packet += sizeof(struct ip);
 	    tcph = (struct tcphdr*)packet;
 	    printf("<TCP information>\n");
-	    printf("source port : %u\n", ntohs(tcph->source));
-	    printf("destination port : %u\n",ntohs(tcph->dest));
+	    printf("Src TCP port : %u\n", ntohs(tcph->source));
+	    printf("Dst TCP port : %u\n",ntohs(tcph->dest));
     }
     }
+    printf("<first 16 data>\n");
     while(length--){
 	   printf("%02x",*(packet++));
 	   if((++count)==16) {printf("\n"); break;} 
