@@ -15,11 +15,20 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
+#define MAX_DATA_LEN 16
+
 void usage() {
   printf("syntax: pcap_test <interface>\n");
   printf("sample: pcap_test wlan0\n");
 }
 
+void print_data(const u_char *packet, uint16_t len){
+  printf("tcp data:");
+  while(len--){
+    printf("%02x ",*(packet++));
+    if(len ==0) printf("\n");
+  }
+}
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
@@ -28,7 +37,6 @@ int main(int argc, char* argv[]) {
   }
   
   char* dev = argv[1];  //옵션 1: 네트웍 디바이스 이름을 인자로 넘겨준다.
-  //char *dev=pcap_lookupdev(errbuf); //옵션 2:사용중인 네트웍 디바이스 이름을 얻어온다.
   char errbuf[PCAP_ERRBUF_SIZE];
   if(dev == NULL){
 	  printf("%s\n", errbuf);
@@ -55,7 +63,11 @@ int main(int argc, char* argv[]) {
 
     int count =1 ;
     int length= header ->len;
-    
+    uint8_t iphdr_len;
+    uint8_t tcphdr_len;
+    uint16_t data_len;
+    uint16_t total_len;
+    uint16_t print_len;
     struct ether_header *ethh;
     uint16_t ether_type;   
     ethh = (struct ether_header *)packet;
@@ -78,26 +90,28 @@ int main(int argc, char* argv[]) {
     {
 	    struct ip *iph;
 	    iph=(struct ip *)packet;
-	    printf("<IP information>\n");
+	    iphdr_len=iph->ip_hl*4;
+      total_len=ntohs(iph->ip_len);
+      printf("<IP information>\n");
 	    printf("Src IP addr: %s\n", inet_ntoa(iph->ip_src));
 	    printf("Dst IP addr: %s\n", inet_ntoa(iph->ip_dst));
     if(iph->ip_p==IPPROTO_TCP){
 	    struct tcphdr *tcph;
-	    packet += sizeof(struct ip);
+	    packet += iphdr_len;
 	    tcph = (struct tcphdr*)packet;
-	    printf("<TCP information>\n");
+	    tcphdr_len=tcph->th_off*4;
+      printf("%d",tcphdr_len);
+      printf("<TCP information>\n");
 	    printf("Src TCP port : %u\n", ntohs(tcph->source));
 	    printf("Dst TCP port : %u\n",ntohs(tcph->dest));
+      packet += tcphdr_len;
     }
     }
-    printf("<first 16 data>\n");
-    while(length--){
-	   printf("%02x",*(packet++));
-	   if((++count)==16) {printf("\n"); break;} 
+    data_len = total_len-iphdr_len-tcphdr_len;
+    print_len = data_len > MAX_DATA_LEN ? MAX_DATA_LEN : data_len;
+    if(print_len > 0){ 
+      print_data(packet,print_len);
     }
-    	    
-    
-    	
   printf("====================\n");  
   }
     
